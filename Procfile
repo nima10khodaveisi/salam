@@ -1,1 +1,1 @@
-worker: java -jar src/main/java/salam.jar
+worker: java -jar test.jar
