@@ -1,4 +1,4 @@
-package Main ;
+
 public class Pair<T, T1> {
     T a ;
     T1 b ;
