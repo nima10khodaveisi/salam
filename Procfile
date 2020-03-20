@@ -1,1 +1,1 @@
-worker: java src/main/java/Main.java
+worker: java -jar out/artifacts/salam_jar/salam.jar
