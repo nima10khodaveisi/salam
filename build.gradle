@@ -23,4 +23,9 @@ dependencies {
     compile "org.telegram:telegrambots:4.6"
 
 
+
+
+
+
+    compile "org.jscience:jscience:4.3.1"
 }
