@@ -1,1 +1,1 @@
-worker : java -jar out/artifacts/salam_jar/salam.jar
+worker: java -jar out/artifacts/salam_jar/salam.jar
