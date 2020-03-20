@@ -1,0 +1,26 @@
+plugins {
+    id 'java'
+}
+
+group 'org.example'
+version '1.0-SNAPSHOT'
+
+sourceCompatibility = 1.8
+
+repositories {
+    mavenCentral()
+}
+
+dependencies {
+    testCompile group: 'junit', name: 'junit', version: '4.12'
+
+    // https://mvnrepository.com/artifact/org.telegram/telegrambots
+    compile group: 'org.telegram', name: 'telegrambots', version: '2.4.4.5'
+
+    // https://mvnrepository.com/artifact/org.telegram/telegrambots-meta
+    compile group: 'org.telegram', name: 'telegrambots-meta', version: '4.0.1'
+
+    compile "org.telegram:telegrambots:4.6"
+
+
+}
