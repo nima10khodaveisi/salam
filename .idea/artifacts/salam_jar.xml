@@ -1,7 +1,10 @@
 <component name="ArtifactManager">
-  <artifact type="jar" build-on-make="true" name="salam:jar">
+  <artifact type="jar" name="salam:jar">
     <output-path>$PROJECT_DIR$/out/artifacts/salam_jar</output-path>
     <root id="archive" name="salam.jar">
+      <element id="directory" name="META-INF">
+        <element id="file-copy" path="$PROJECT_DIR$/src/main/java/Main/META-INF/MANIFEST.MF" />
+      </element>
       <element id="module-output" name="salam.main" />
       <element id="extracted-dir" path="$USER_HOME$/.gradle/caches/modules-2/files-2.1/commons-io/commons-io/2.6/815893df5f31da2ece4040fe0a12fd44b577afaf/commons-io-2.6.jar" path-in-jar="/" />
       <element id="extracted-dir" path="$USER_HOME$/.gradle/caches/modules-2/files-2.1/org.telegram/telegrambots-meta/4.6/959a0ea151af21113accf17b3843a43826c76726/telegrambots-meta-4.6.jar" path-in-jar="/" />
