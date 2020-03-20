@@ -1,1 +1,1 @@
-worker: java -cp out/artifacts/salam_jar/salam.jar Main
+worker: java -cp salam.jar Main
