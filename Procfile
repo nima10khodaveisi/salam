@@ -1,1 +1,1 @@
-worker: java -jar test.jar
+worker: java -jar salam.jar
