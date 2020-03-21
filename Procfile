@@ -1,1 +1,1 @@
-worker: java -cp salam.jar Main
+web: java -cp salam.jar Main
