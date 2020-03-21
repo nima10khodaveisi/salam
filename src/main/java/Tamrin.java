@@ -92,7 +92,7 @@ public class Tamrin extends TelegramLongPollingBot {
             curUser = new User(update.getMessage()) ;
             users.add(curUser) ;
         }
-        System.out.println(curUser.getName());
+        System.out.println(curUser.getName() + " " + update.getMessage().getText());
         String command = curUser.getCommand() ;
         if(command == null) {
             String str = update.getMessage().getText() ;
@@ -127,6 +127,7 @@ public class Tamrin extends TelegramLongPollingBot {
         } else if(command.equals("name")) {
             if(update.getMessage().getAudio() == null) {
                 // /done
+                System.out.println("done " + nameOfPlayList);
                 sendMessage(nameOfPlayList + " has been created!") ;
                 clear_history() ;
                 curUser.setCommand(null) ;
@@ -134,6 +135,7 @@ public class Tamrin extends TelegramLongPollingBot {
             }
             curUser.add(nameOfPlayList , update.getMessage()) ;
             curUser.addToHistory(update.getMessage()) ;
+            System.out.println("add " + update.getMessage().getAudio().getTitle());
         } else if(command.equals("/get")) {
             curUser.setCommand(null) ;
             String name = update.getMessage().getText() ;
@@ -148,6 +150,7 @@ public class Tamrin extends TelegramLongPollingBot {
                 SendAudio sendAudio = new SendAudio() ;
                 sendAudio.setAudio(song) ;
                 sendAudio.setChatId(update.getMessage().getChatId()) ;
+                System.out.println("get " + name + " "  + song);
                 try {
                     Message message = execute(sendAudio) ;
                     curUser.addToHistory(message) ;
