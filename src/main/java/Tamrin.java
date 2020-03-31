@@ -6,6 +6,12 @@ import org.telegram.telegrambots.meta.api.methods.send.SendMessage;
 import org.telegram.telegrambots.meta.api.methods.updatingmessages.DeleteMessage;
 import org.telegram.telegrambots.meta.api.objects.Message;
 import org.telegram.telegrambots.meta.api.objects.Update;
+import org.telegram.telegrambots.meta.api.objects.replykeyboard.InlineKeyboardMarkup;
+import org.telegram.telegrambots.meta.api.objects.replykeyboard.ReplyKeyboardMarkup;
+import org.telegram.telegrambots.meta.api.objects.replykeyboard.ReplyKeyboardRemove;
+import org.telegram.telegrambots.meta.api.objects.replykeyboard.buttons.InlineKeyboardButton;
+import org.telegram.telegrambots.meta.api.objects.replykeyboard.buttons.KeyboardButton;
+import org.telegram.telegrambots.meta.api.objects.replykeyboard.buttons.KeyboardRow;
 import org.telegram.telegrambots.meta.exceptions.TelegramApiException;
 import org.telegram.telegrambots.meta.bots.AbsSender;
 
@@ -14,10 +20,7 @@ import com.google.gson.Gson ;
 
 import java.io.*;
 import java.lang.reflect.Method;
-import java.util.ArrayList;
-import java.util.Date;
-import java.util.HashMap;
-import java.util.HashSet;
+import java.util.*;
 
 
 public class Tamrin extends TelegramLongPollingBot {
@@ -45,16 +48,17 @@ public class Tamrin extends TelegramLongPollingBot {
     }
 
 
-    public void sendMessage(String text) {
+    public Message sendMessage(String text) {
         SendMessage message = new SendMessage();
         message.setText(text);
         message.setChatId(curUser.getChatId());
         System.out.println(curUser.getName() + " " + text);
         try {
-            execute(message);
+            return execute(message);
         } catch (TelegramApiException e) {
             e.printStackTrace();
         }
+        return null ;
     }
 
     public void deleteSent() {
@@ -148,8 +152,58 @@ public class Tamrin extends TelegramLongPollingBot {
         if (command == null) {
             String str = update.getMessage().getText();
             if ("/create".equals(str) || "/add".equals(str)) {
+
+
+                String stringBuilder = "please enter the name of playlist";
+                SendMessage message = new SendMessage().setChatId(curUser.getChatId()).setText(stringBuilder) ;
+
+
+                ReplyKeyboardRemove replyKeyboardRemove = new ReplyKeyboardRemove() ;
+                message.setReplyMarkup(replyKeyboardRemove) ;
+
+                try {
+                    execute(message) ;
+                } catch (TelegramApiException e) {
+                    e.printStackTrace();
+                }
+
+
                 curUser.setCommand("/create");
             } else if ("/get".equals(str)) {
+
+
+                String stringBuilder = "choose the playlist you want to listen";
+                SendMessage message = new SendMessage().setChatId(curUser.getChatId()).setText(stringBuilder) ;
+
+
+                ReplyKeyboardMarkup keyboardMarkup = new ReplyKeyboardMarkup() ;
+
+                List<KeyboardRow> keyboardRows = new ArrayList<>() ;
+
+                KeyboardRow row = new KeyboardRow() ;
+
+                for(PlayList playList : curUser.getPlayLists()) {
+                    row.add(playList.getName()) ;
+                    if(row.size() == 3) {
+                        keyboardRows.add(row);
+                        row = new KeyboardRow();
+                    }
+                }
+                if(row.size() > 0)
+                    keyboardRows.add(row) ;
+
+                keyboardMarkup.setKeyboard(keyboardRows) ;
+                message.setReplyMarkup(keyboardMarkup) ;
+
+                try {
+                    execute(message) ;
+                } catch (TelegramApiException e) {
+                    e.printStackTrace();
+                }
+
+
+
+
                 curUser.setCommand("/get");
             } else if ("/list".equals(str)) {
                 curUser.setCommand(null);
@@ -160,7 +214,31 @@ public class Tamrin extends TelegramLongPollingBot {
                 sendMessage(stringBuilder);
             } else if (str.equals("/start")) {
                 String stringBuilder = "Hey welcome to playlist bot";
-                sendMessage(stringBuilder);
+                SendMessage message = new SendMessage().setChatId(curUser.getChatId()).setText(stringBuilder) ;
+
+
+                ReplyKeyboardMarkup keyboardMarkup = new ReplyKeyboardMarkup() ;
+
+                List<KeyboardRow> keyboardRows = new ArrayList<>() ;
+
+                KeyboardRow row = new KeyboardRow() ;
+
+                row.add("/create") ;
+                row.add("/get") ;
+                row.add("/list") ;
+
+                keyboardRows.add(row) ;
+                keyboardMarkup.setKeyboard(keyboardRows) ;
+                message.setReplyMarkup(keyboardMarkup) ;
+
+                try {
+                    execute(message) ;
+                } catch (TelegramApiException e) {
+                    e.printStackTrace();
+                }
+
+
+
             } else if (str.equals("/users")) {
                 if (update.getMessage().getFrom().getUserName().equals("Nima10Khodaveisi")) {
                     String string = "list of users : ";
@@ -177,7 +255,6 @@ public class Tamrin extends TelegramLongPollingBot {
                         } catch (FileNotFoundException e) {
                             e.printStackTrace();
                         }
-                        ;
                         sendDocument.setChatId(curUser.getChatId()) ;
                         try {
                             execute(sendDocument) ;
@@ -187,6 +264,31 @@ public class Tamrin extends TelegramLongPollingBot {
                     }
             }
         } else if (command.equals("/create")) {
+
+            String stringBuilder = "now send your musics and press /done button when you are done";
+            SendMessage message = new SendMessage().setChatId(curUser.getChatId()).setText(stringBuilder) ;
+
+
+            ReplyKeyboardMarkup keyboardMarkup = new ReplyKeyboardMarkup() ;
+
+            List<KeyboardRow> keyboardRows = new ArrayList<>() ;
+
+            KeyboardRow row = new KeyboardRow() ;
+
+            row.add("/done") ;
+
+            keyboardRows.add(row) ;
+            keyboardMarkup.setKeyboard(keyboardRows) ;
+            message.setReplyMarkup(keyboardMarkup) ;
+
+
+            try {
+                execute(message) ;
+            } catch (TelegramApiException e) {
+                e.printStackTrace();
+            }
+
+
             String name = update.getMessage().getText();
             nameOfPlayList = name;
             curUser.setCommand("name");
@@ -194,8 +296,33 @@ public class Tamrin extends TelegramLongPollingBot {
         } else if (command.equals("name")) {
             if (update.getMessage().getAudio() == null) {
                 // /done
-                System.out.println("done " + nameOfPlayList);
-                sendMessage(nameOfPlayList + " has been created!");
+
+
+                String stringBuilder = nameOfPlayList + " has been created!" ;
+                SendMessage message = new SendMessage().setChatId(curUser.getChatId()).setText(stringBuilder) ;
+
+
+                ReplyKeyboardMarkup keyboardMarkup = new ReplyKeyboardMarkup() ;
+
+                List<KeyboardRow> keyboardRows = new ArrayList<>() ;
+
+                KeyboardRow row = new KeyboardRow() ;
+
+                row.add("/create") ;
+                row.add("/get") ;
+                row.add("/list") ;
+
+                keyboardRows.add(row) ;
+                keyboardMarkup.setKeyboard(keyboardRows) ;
+                message.setReplyMarkup(keyboardMarkup) ;
+
+                try {
+                    execute(message) ;
+                } catch (TelegramApiException e) {
+                    e.printStackTrace();
+                }
+
+
                 clear_history();
                 curUser.setCommand(null);
                 return;
@@ -204,6 +331,31 @@ public class Tamrin extends TelegramLongPollingBot {
             curUser.addToHistory(new Pair(update.getMessage().getChatId(),update.getMessage().getMessageId()));
             System.out.println("add " + update.getMessage().getAudio().getTitle());
         } else if (command.equals("/get")) {
+
+            String stringBuilder = "here you are!";
+            SendMessage sendMessage = new SendMessage().setChatId(curUser.getChatId()).setText(stringBuilder) ;
+
+
+            ReplyKeyboardMarkup keyboardMarkup = new ReplyKeyboardMarkup() ;
+
+            List<KeyboardRow> keyboardRows = new ArrayList<>() ;
+
+            KeyboardRow row = new KeyboardRow() ;
+
+            row.add("/create") ;
+            row.add("/get") ;
+            row.add("/list") ;
+
+            keyboardRows.add(row) ;
+            keyboardMarkup.setKeyboard(keyboardRows) ;
+            sendMessage.setReplyMarkup(keyboardMarkup) ;
+
+            try {
+                execute(sendMessage) ;
+            } catch (TelegramApiException e) {
+                e.printStackTrace();
+            }
+
             curUser.setCommand(null);
             String name = update.getMessage().getText();
             PlayList playList = curUser.getPlayList(name);

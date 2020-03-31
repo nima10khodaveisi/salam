@@ -21,6 +21,7 @@ public class Main {
             } ;
             Timer timer = new Timer() ;
             timer.scheduleAtFixedRate(timerTask, 1000, 20 * 60 * 60 * 1000) ;
+            //timer.scheduleAtFixedRate(timerTask, 1000,1000) ;
         } catch (TelegramApiException e) {
             e.printStackTrace();
         }
