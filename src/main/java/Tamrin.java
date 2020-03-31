@@ -1,3 +1,4 @@
+import org.checkerframework.checker.units.qual.A;
 import org.telegram.telegrambots.bots.TelegramLongPollingBot;
 import org.telegram.telegrambots.meta.api.methods.send.SendAudio;
 import org.telegram.telegrambots.meta.api.methods.send.SendMessage;
@@ -5,7 +6,7 @@ import org.telegram.telegrambots.meta.api.methods.updatingmessages.DeleteMessage
 import org.telegram.telegrambots.meta.api.objects.Message;
 import org.telegram.telegrambots.meta.api.objects.Update;
 import org.telegram.telegrambots.meta.exceptions.TelegramApiException;
-import org.telegram.telegrambots.meta.bots.AbsSender ;
+import org.telegram.telegrambots.meta.bots.AbsSender;
 
 import java.lang.reflect.Method;
 import java.util.ArrayList;
@@ -16,25 +17,28 @@ import java.util.HashSet;
 
 public class Tamrin extends TelegramLongPollingBot {
     // name , file
-    String nameOfPlayList = null ;
-    ArrayList<User> users = new ArrayList<>() ;
-    User curUser = null ;
+    private String nameOfPlayList = null;
+    private ArrayList<User> users = new ArrayList<>();
+    private User curUser = null;
+    private ArrayList<Message> sent = new ArrayList<>() ;
 
     public void clear_history() {
-        ArrayList<Message> history = curUser.getHistory() ;
-        if(history.isEmpty())
-            return ;
-        for(Message message : history) {
-            DeleteMessage deleteMessage = new DeleteMessage(curUser.getChatId() , message.getMessageId()) ;
+        ArrayList<Message> history = curUser.getHistory();
+        if (history.isEmpty())
+            return;
+        for (Message message : history) {
+            DeleteMessage deleteMessage = new DeleteMessage(curUser.getChatId(), message.getMessageId());
             try {
-                execute(deleteMessage) ;
+                execute(deleteMessage);
             } catch (TelegramApiException e) {
                 e.printStackTrace();
             }
         }
         history.clear();
-        curUser.setHistory(history) ;
+        curUser.setHistory(history);
     }
+
+    /*
 
     public void check_history_time() {
         if(curUser == null) {
@@ -62,98 +66,125 @@ public class Tamrin extends TelegramLongPollingBot {
         for(Message message : remove)
             history.remove(message) ;
         curUser.setHistory(history) ;
-    }
+    }*/
 
     public void sendMessage(String text) {
-        SendMessage message = new SendMessage() ;
-        message.setText(text) ;
-        message.setChatId(curUser.getChatId()) ;
+        SendMessage message = new SendMessage();
+        message.setText(text);
+        message.setChatId(curUser.getChatId());
         System.out.println(curUser.getName() + " " + text);
         try {
-            execute(message) ;
+            execute(message);
         } catch (TelegramApiException e) {
             e.printStackTrace();
         }
     }
 
+    public void deleteSent() {
+        ArrayList<Message> remove = new ArrayList<>() ;
+        ArrayList<Message> add = new ArrayList<>() ;
+        if(sent.isEmpty()) return ;
+        for(int i = 0 ; i < sent.size() ; ++i) {
+            Message message = sent.get(i) ;
+            long now = System.currentTimeMillis() ;
+            long messageTime = message.getDate() ;
+            if(now / 1000 - messageTime >= 20 * 60 * 60){
+                remove.add(message) ;
+
+                DeleteMessage deleteMessage = new DeleteMessage(message.getChatId(), message.getMessageId()) ;
+                SendAudio sendAudio = new SendAudio() ;
+                sendAudio.setAudio(message.getAudio().getFileId());
+                sendAudio.setChatId(message.getChatId());
+                try {
+                    execute(deleteMessage) ;
+                    Message message1 = execute(sendAudio) ;
+                    add.add(message1) ;
+                } catch (TelegramApiException e) {
+                    e.printStackTrace();
+                }
+            }
+        }
+        for(Message message : remove)
+            sent.remove(message) ;
+        for(Message message : add)
+            sent.add(message) ;
+    }
+
     @Override
     public void onUpdateReceived(Update update) {
-        check_history_time() ;
-        boolean alreadyUser = false ;
-        for(User user : users) {
-            if(user.getChatId() == update.getMessage().getChatId()) {
-                curUser = user ;
-                alreadyUser = true ;
-                break ;
+        boolean alreadyUser = false;
+        for (User user : users) {
+            if (user.getChatId() == update.getMessage().getChatId()) {
+                curUser = user;
+                alreadyUser = true;
+                break;
             }
         }
-        if(!alreadyUser) {
+        if (!alreadyUser) {
             System.out.println("shiiiit");
-            curUser = new User(update.getMessage()) ;
-            users.add(curUser) ;
+            curUser = new User(update.getMessage());
+            users.add(curUser);
         }
         System.out.println(curUser.getName() + " " + update.getMessage().getText());
-        String command = curUser.getCommand() ;
-        if(command == null) {
-            String str = update.getMessage().getText() ;
+        String command = curUser.getCommand();
+        if (command == null) {
+            String str = update.getMessage().getText();
             if ("/create".equals(str) || "/add".equals(str)) {
-                curUser.setCommand("/create") ;
+                curUser.setCommand("/create");
             } else if ("/get".equals(str)) {
-                curUser.setCommand("/get") ;
+                curUser.setCommand("/get");
             } else if ("/list".equals(str)) {
-                curUser.setCommand(null) ;
-                String stringBuilder = "List of your playlists : \n" ;
-                for(PlayList playList : curUser.getPlayLists()) {
-                    stringBuilder += playList.getName() + "," ;
+                curUser.setCommand(null);
+                String stringBuilder = "List of your playlists : \n";
+                for (PlayList playList : curUser.getPlayLists()) {
+                    stringBuilder += playList.getName() + ",";
                 }
-                sendMessage(stringBuilder) ;
-            } else if(str.equals("/start")) {
-                String stringBuilder = "Hey welcome to playlist bot , this is a demo version of bot\n" +
-                        "contact me : @nima10khodaveisi";
-                sendMessage(stringBuilder) ;
-            } else if(str.equals("/users")) {
-                if(update.getMessage().getFrom().getUserName().equals("Nima10Khodaveisi")) {
-                   String string = "list of users : "  ;
-                   for(User user : users)
-                       string += user.getName() + ", " ;
-                   sendMessage(string) ;
+                sendMessage(stringBuilder);
+            } else if (str.equals("/start")) {
+                String stringBuilder = "Hey welcome to playlist bot";
+                sendMessage(stringBuilder);
+            } else if (str.equals("/users")) {
+                if (update.getMessage().getFrom().getUserName().equals("Nima10Khodaveisi")) {
+                    String string = "list of users : ";
+                    for (User user : users)
+                        string += user.getName() + ", ";
+                    sendMessage(string);
                 }
             }
-        } else if(command.equals("/create")) {
-            String name = update.getMessage().getText() ;
-            nameOfPlayList = name ;
-            curUser.setCommand("name") ;
-            curUser.createNewPlayList(name) ;
-        } else if(command.equals("name")) {
-            if(update.getMessage().getAudio() == null) {
+        } else if (command.equals("/create")) {
+            String name = update.getMessage().getText();
+            nameOfPlayList = name;
+            curUser.setCommand("name");
+            curUser.createNewPlayList(name);
+        } else if (command.equals("name")) {
+            if (update.getMessage().getAudio() == null) {
                 // /done
                 System.out.println("done " + nameOfPlayList);
-                sendMessage(nameOfPlayList + " has been created!") ;
-                clear_history() ;
-                curUser.setCommand(null) ;
-                return ;
+                sendMessage(nameOfPlayList + " has been created!");
+                clear_history();
+                curUser.setCommand(null);
+                return;
             }
-            curUser.add(nameOfPlayList , update.getMessage()) ;
-            curUser.addToHistory(update.getMessage()) ;
+            curUser.add(nameOfPlayList, update.getMessage());
+            curUser.addToHistory(update.getMessage());
             System.out.println("add " + update.getMessage().getAudio().getTitle());
-        } else if(command.equals("/get")) {
-            curUser.setCommand(null) ;
-            String name = update.getMessage().getText() ;
-            clear_history() ;
-            PlayList playList = curUser.getPlayList(name) ;
-            if(playList == null) {
-                return ;
+        } else if (command.equals("/get")) {
+            curUser.setCommand(null);
+            String name = update.getMessage().getText();
+            PlayList playList = curUser.getPlayList(name);
+            if (playList == null) {
+                return;
             }
-            ArrayList<String> songs = playList.getSongs() ;
-            for(String song : songs) {
+            ArrayList<String> songs = playList.getSongs();
+            for (String song : songs) {
                 System.out.println(song);
-                SendAudio sendAudio = new SendAudio() ;
-                sendAudio.setAudio(song) ;
-                sendAudio.setChatId(update.getMessage().getChatId()) ;
-                System.out.println("get " + name + " "  + song);
+                SendAudio sendAudio = new SendAudio();
+                sendAudio.setAudio(song);
+                sendAudio.setChatId(update.getMessage().getChatId());
+                System.out.println("get " + name + " " + song);
                 try {
-                    Message message = execute(sendAudio) ;
-                    curUser.addToHistory(message) ;
+                    Message message = execute(sendAudio);
+                    sent.add(message) ;
                 } catch (TelegramApiException e) {
                     e.printStackTrace();
                 }
@@ -163,11 +194,11 @@ public class Tamrin extends TelegramLongPollingBot {
 
     @Override
     public String getBotUsername() {
-        return "MyOwnPlayLists_bot" ;
+        return "MyOwnPlayLists_bot";
     }
 
     @Override
     public String getBotToken() {
-        return "928487559:AAEvAZnXgaV5aw8Wzq9kPV1QtW85Lgwl0l8" ;
+        return "928487559:AAEvAZnXgaV5aw8Wzq9kPV1QtW85Lgwl0l8";
     }
 }
