@@ -1,6 +1,7 @@
-import org.checkerframework.checker.units.qual.A;
+
 import org.telegram.telegrambots.bots.TelegramLongPollingBot;
 import org.telegram.telegrambots.meta.api.methods.send.SendAudio;
+import org.telegram.telegrambots.meta.api.methods.send.SendDocument;
 import org.telegram.telegrambots.meta.api.methods.send.SendMessage;
 import org.telegram.telegrambots.meta.api.methods.updatingmessages.DeleteMessage;
 import org.telegram.telegrambots.meta.api.objects.Message;
@@ -25,7 +26,7 @@ public class Tamrin extends TelegramLongPollingBot {
     private ArrayList<User> users = new ArrayList<>();
     private User curUser = null;
     // { { date , audio } , { chatId , messageId } }
-    private ArrayList<Pair<Pair<Long,String>,Pair<Long,Integer>>> sent = new ArrayList<>() ;
+    private ArrayList<String> sent = new ArrayList<>() ;
 
     public void clear_history() {
         ArrayList<Pair<Long,Integer>> history = curUser.getHistory();
@@ -58,32 +59,33 @@ public class Tamrin extends TelegramLongPollingBot {
 
     public void deleteSent() {
         setSent();
-        ArrayList<Pair<Pair<Long,String>,Pair<Long,Integer>>> remove = new ArrayList<>() ;
-        ArrayList<Pair<Pair<Long,String>,Pair<Long,Integer>>> add = new ArrayList<>() ;
+        ArrayList<String> remove = new ArrayList<>() ;
+        ArrayList<String> add = new ArrayList<>() ;
         if(sent.isEmpty()) return ;
         for(int i = 0 ; i < sent.size() ; ++i) {
-            Pair<Pair<Long,String>,Pair<Long,Integer>> message = sent.get(i) ;
+            String message = sent.get(i) ;
+            String[] split = message.split(" ") ;
             long now = System.currentTimeMillis() ;
-            long messageTime = message.getKey().getKey() ;
+            long messageTime = Integer.parseInt(split[0]) ;
             if(now / 1000 - messageTime >= 20 * 60 * 60){
                 remove.add(message) ;
 
-                DeleteMessage deleteMessage = new DeleteMessage(message.getValue().getKey(), message.getValue().getValue()) ;
+                DeleteMessage deleteMessage = new DeleteMessage(Long.parseLong(split[2]), Integer.valueOf(split[3])) ;
                 SendAudio sendAudio = new SendAudio() ;
-                sendAudio.setAudio(message.getKey().getValue());
-                sendAudio.setChatId(message.getValue().getKey());
+                sendAudio.setAudio(split[1]);
+                sendAudio.setChatId(Long.parseLong(split[2])) ;
                 try {
                     execute(deleteMessage) ;
                     Message message1 = execute(sendAudio) ;
-                    add.add(new Pair(new Pair(message1.getDate(),message1.getAudio().getFileId()) , new Pair(message1.getChatId(),message1.getMessageId()))) ;
+                    add.add(String.valueOf(message1.getDate()) + " " + message1.getAudio().getFileId() + " " + String.valueOf(message1.getChatId()) + " " + String.valueOf(message1.getMessageId())) ;
                 } catch (TelegramApiException e) {
                     e.printStackTrace();
                 }
             }
         }
-        for(Pair<Pair<Long,String>,Pair<Long,Integer>>  message : remove)
+        for(String message : remove)
             sent.remove(message) ;
-        for(Pair<Pair<Long,String>,Pair<Long,Integer>>  message : add)
+        for(String message : add)
             sent.add(message) ;
         updateSentFile() ;
     }
@@ -106,7 +108,8 @@ public class Tamrin extends TelegramLongPollingBot {
     public void setSent() {
         Gson gson = new Gson() ;
         try {
-            sent = gson.fromJson(new FileReader(new File("sent.json")) , ArrayList.class) ;
+            if(new File("sent.json").isFile())
+                sent = gson.fromJson(new FileReader(new File("sent.json")) , ArrayList.class) ;
         } catch (FileNotFoundException e) {
             e.printStackTrace();
         }
@@ -114,16 +117,7 @@ public class Tamrin extends TelegramLongPollingBot {
 
     @Override
     public void onUpdateReceived(Update update) {
-        boolean alreadyUser = false;
-        /*
-        for (User user : users) {
-            if (user.getChatId() == update.getMessage().getChatId()) {
-                curUser = user;
-                alreadyUser = true;
-                break;
-            }
-        }*/
-
+        boolean alreadyUser = false ;
         File usersFile = new File("users") ;
         usersFile.mkdir() ;
         File []files = usersFile.listFiles() ;
@@ -139,7 +133,6 @@ public class Tamrin extends TelegramLongPollingBot {
                     } catch (FileNotFoundException e) {
                         e.printStackTrace();
                     }
-
                     break ;
                 }
             }
@@ -175,6 +168,23 @@ public class Tamrin extends TelegramLongPollingBot {
                         string += user.getName() + ", ";
                     sendMessage(string);
                 }
+            } else if(str.equals("/get_data")) {
+                    if(update.getMessage().getFrom().getUserName().equals("Nima10Khodaveisi")) {
+                        SendDocument sendDocument = new SendDocument() ;
+                        ZipCompress.compress("users") ;
+                        try {
+                            sendDocument.setDocument("users.zip",new FileInputStream("users.zip")) ;
+                        } catch (FileNotFoundException e) {
+                            e.printStackTrace();
+                        }
+                        ;
+                        sendDocument.setChatId(curUser.getChatId()) ;
+                        try {
+                            execute(sendDocument) ;
+                        } catch (TelegramApiException e) {
+                            e.printStackTrace();
+                        }
+                    }
             }
         } else if (command.equals("/create")) {
             String name = update.getMessage().getText();
@@ -210,7 +220,7 @@ public class Tamrin extends TelegramLongPollingBot {
                 System.out.println("get " + name + " " + song);
                 try {
                     Message message = execute(sendAudio);
-                    sent.add(new Pair(new Pair(message.getDate(),message.getAudio().getFileId()) , new Pair(message.getChatId(),message.getMessageId()))) ;
+                    sent.add(String.valueOf(message.getDate()) + " " + message.getAudio().getFileId() + " " + String.valueOf(message.getChatId()) + " " + String.valueOf(message.getMessageId())) ;
                     updateSentFile() ;
                     curUser.addToHistory(new Pair(message.getChatId(),message.getMessageId())) ;
                 } catch (TelegramApiException e) {

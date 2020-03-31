@@ -3,6 +3,8 @@ public class Pair<T, T1> {
     T a ;
     T1 b ;
 
+    public Pair() { }
+
     public T getKey() {
         return a ;
     }
